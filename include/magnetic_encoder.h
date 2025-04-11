@@ -1,3 +1,4 @@
+/*
 #include <Arduino.h>
 
 class magneticEncoder{
@@ -6,3 +7,4 @@ class magneticEncoder{
         double getDistTraveled();
         uint_32t readPosition();
 };
+*/
