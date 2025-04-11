@@ -1,21 +1,6 @@
 #include <Arduino.h>
-#include "magnetic_encoder.h"
-
-/*  Magnetic Encoder Code for the AEAT-6600-T16 (C++ Version)
-*   Written by: Alexander Fried
-*
-*   Intended to be used with the Arduino UNO R3. Most of the code is derived from Dan Royer's(GitHub: i-make-robots)
-*   "aeat6600-t16-sensor-test" repository. The sensor should be setup to match the schematic from an unnamed user's
-*   (GitHub: 4answer) "AEAT-6600-T16" repository.
-*
-*   Created for data collection with a surveyor's wheel. You must record your specific wheel's radius under 
-*   "WHEEL_RAD" in the variable defintions section below.
-*
-*   This code was written using the following sources as references:
-*   https://github.com/4nswer/AEAT-6600-T16
-*   https://github.com/MarginallyClever/aeat6600-t16-sensor-test
-*   https://forum.arduino.cc/t/absolute-rotary-encoder-ssi-spi-how/153103
-*/
+#include "main.h"
+using namespace std;
 
 // Pin Definitions:
 #define MAG_HI      3
@@ -39,43 +24,10 @@
 double totalDistance = 0;
 double pastPosition = 0;
 
-void magneticEncoder::setup() {
-  pinMode(MAG_HI, INPUT);                   // Outputs HIGH when magnetic field is too strong
-  pinMode(MAG_LO, INPUT);                   // Outputs HIGH when magnetic field is too weak
-  pinMode(ALIGN_PIN,OUTPUT);                // Set LOW for normal operation, set HIGH for alignment mode
-  pinMode(PWR_DWN,OUTPUT);                  // Set HIGH to begin powering-off the device 
-  pinMode(PROG_PIN,OUTPUT);                 // Set LOW for normal operation, set HIGH for OTP programming (pull-down)
-  pinMode(NCS_PIN,OUTPUT);                  // Set HIGH for internal pull-up
-  pinMode(DATA_PIN, INPUT);                 // Outputs sensor readings
-  pinMode(CLK_PIN, OUTPUT);                 // Set HIGH to begin the clock
-  //digitalWrite(NCS_PIN, HIGH);
-  digitalWrite(CLK_PIN, HIGH);
-  Serial.begin(57600);                      // Sets the data rate to the specified bits-per-second
-  Serial.println("Surveyor's Wheel Distance Calculations: ");
-}
-
-void magneticEncoder::loop() {
-  //digitalWrite(NCS_PIN, LOW);
-  delay(3000);
-  double distTraveled = getDistTraveled();
-  totalDistance += distTraveled;
-  Serial.print("Current Distance from Start: ");
-  Serial.print(totalDistance);
-  Serial.println("m");
-  Serial.print("Distance since last Reading: ");
-  Serial.print(distTraveled);
-  Serial.print("m");
-}
-
 // Function Definitions:
-double magneticEncoder::getDistTraveled() {
-  double currPosition = (readPosition() * DIST_PER_BIT);
-  double distTraveled = currPosition - pastPosition;
-  pastPosition = currPosition;
-  return distTraveled;
-}
 
-uint32_t magneticEncoder::readPosition() {
+namespace supporting_functions{
+  uint32_t readPosition() {
   uint32_t data = 0;
   uint8_t instream = 0;
 
@@ -97,4 +49,64 @@ uint32_t magneticEncoder::readPosition() {
   digitalWrite(CLK_PIN, HIGH);
 
   return data;
+}
+
+double getDistTraveled() {
+  double currPosition = (readPosition() * DIST_PER_BIT);
+  double distTraveled = currPosition - pastPosition;
+  pastPosition = currPosition;
+  return distTraveled;
+}
+
+}
+
+
+/*  Magnetic Encoder Code for the AEAT-6600-T16 (C++ Version)
+*   Written by: Alexander Fried
+*
+*   Intended to be used with the Arduino UNO R3. Most of the code is derived from Dan Royer's(GitHub: i-make-robots)
+*   "aeat6600-t16-sensor-test" repository. The sensor should be setup to match the schematic from an unnamed user's
+*   (GitHub: 4answer) "AEAT-6600-T16" repository. 
+*   
+*   Created for data collection with a surveyor's wheel. You must record your specific wheel's radius under 
+*   "WHEEL_RAD" in the variable defintions section below.
+*   
+*   This code was written using the following sources as references:
+*   https://github.com/4nswer/AEAT-6600-T16 
+*   https://github.com/MarginallyClever/aeat6600-t16-sensor-test 
+*   https://forum.arduino.cc/t/absolute-rotary-encoder-ssi-spi-how/153103 
+*/
+
+
+
+// Function Declarations:
+//double getDistTraveled();
+//uint32_t readPosition();
+
+void setup() {
+  pinMode(MAG_HI, INPUT);                   // Outputs HIGH when magnetic field is too strong
+  pinMode(MAG_LO, INPUT);                   // Outputs HIGH when magnetic field is too weak
+  pinMode(ALIGN_PIN,OUTPUT);                // Set LOW for normal operation, set HIGH for alignment mode
+  pinMode(PWR_DWN,OUTPUT);                  // Set HIGH to begin powering-off the device 
+  pinMode(PROG_PIN,OUTPUT);                 // Set LOW for normal operation, set HIGH for OTP programming (pull-down)
+  pinMode(NCS_PIN,OUTPUT);                  // Set HIGH for internal pull-up
+  pinMode(DATA_PIN, INPUT);                 // Outputs sensor readings
+  pinMode(CLK_PIN, OUTPUT);                 // Set HIGH to begin the clock
+  digitalWrite(NCS_PIN, HIGH);
+  digitalWrite(CLK_PIN, HIGH);
+  Serial.begin(57600);                      // Sets the data rate to the specified bits-per-second
+  Serial.println("Surveyor's Wheel Distance Calculations: ");
+}
+
+void loop() {
+  digitalWrite(NCS_PIN, LOW);
+  delay(3000);
+  double distTraveled = supporting_functions::getDistTraveled();
+  totalDistance += distTraveled;
+  Serial.print("Current Distance from Start: ");
+  Serial.print(totalDistance);
+  Serial.println("m");
+  Serial.print("Distance since last Reading: ");
+  Serial.print(distTraveled);
+  Serial.print("m");
 }
